@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+# set -x
+
+PROGRAM_NAME="System backup & Restore Setup"
+
+declare -a termSize=( $(stty size) )
+
+BASE_FOLDER="/home/${USER}/.config"
+
+BACKUP_DIR='/mnt/Morph/system-backup'
+
+declare -a BACKUP_FOLDERS=(
+    "${BASE_FOLDER}/BraveSoftware/Brave-Browser"
+    "${BASE_FOLDER}/kwalletrc*"
+    "${BASE_FOLDER}/xsettings*"
+    "${BASE_FOLDER}/plasma*"
+    "${BASE_FOLDER}/nautilus"
+    "${BASE_FOLDER}/kwinrc*"
+    "${BASE_FOLDER}/code*"
+    "${BASE_FOLDER}/user*"
+    "${BASE_FOLDER}/kd*"
+)
+
+banner(){
+    local avail_screen=$(( $(( "${termSize[1]}" - "${#1}" )) - 2 ))
+    local counter=$(( "${avail_screen}" / 2 ))
+    
+    while  (("${counter}">0)) ; do
+        echo -en "\033[1;31m-\033[m"
+        counter=$(( counter - 1 ))
+        sleep .005
+    done
+    
+    echo -en " \033[1;32m${1}\033[m "
+    
+    local counter=$(( "${avail_screen}" / 2 ))
+    
+    while  (("${counter}">=0)) ; do
+        echo -en "\033[1;31m-\033[m"
+        counter=$(( counter - 1 ))
+        sleep .005
+    done
+    echo;
+}
+
+backup(){
+    mkdir ${BACKUP_DIR} -p
+    tar cvf "${BACKUP_DIR}/backup.tar" ${BACKUP_FOLDERS[@]}
+}
+
+setup(){
+    tar -xvf "${BACKUP_DIR}/backup.tar" "${BASE_FOLDER}"
+}
+
+menu(){
+    declare -a menu=("Create backup" "Setup system" "Exit")
+    
+    counter=0;
+    
+    for item in "${menu[@]}"; do
+        counter=$(( counter + 1 ))
+        echo "${counter}. ${item}"
+    done
+    
+    read -rp "Option: " option;
+    
+    case "${option}" in
+        1)
+            backup
+        ;;
+        
+        2)
+            setup
+        ;;
+        
+        3)
+            return 0;
+        ;;
+        
+        *)
+            echo "default (none of above)"
+        ;;
+    esac
+    
+    
+}
+
+init(){
+    :
+}
+
+_(){
+    banner "${PROGRAM_NAME}"
+    
+    menu
+    # init
+}
+
+_
